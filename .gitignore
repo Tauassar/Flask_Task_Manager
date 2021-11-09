@@ -2,3 +2,5 @@
 .git/*
 venv/*
 *.db
+debugging/*
+__pycache__/*
