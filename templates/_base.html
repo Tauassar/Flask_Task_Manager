@@ -2,16 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Flask blog</title>
+    <title>FlaskTaskr</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
   <div class="container">
     {% for message in get_flashed_messages() %}
-    <div class="flash">{{ message }}</div>
+      <div class="flash">{{ message }}</div>
     {% endfor %}
     {% if error %}
-    <p class="error"><strong>Error:</strong> {{ error }}</p>
+      <p class="error"><strong>Error:</strong> {{ error }}</p>
     {% endif %}
     <!--    inheritance    -->
     {% block content %}
