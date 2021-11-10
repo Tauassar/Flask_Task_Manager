@@ -32,14 +32,14 @@ def login_required(test):
 # Route handlers
 
 
-@app.route('/logout/', endpoint='logout')
+@app.route('/logout/', methods=['GET'], endpoint='logout')
 def logout():
     session.pop('logged_in', None)
     flash('Logged out')
     return redirect(url_for('login'))
 
 
-@app.route('/', endpoint='login')
+@app.route('/', methods=['GET', 'POST'], endpoint='login')
 def login():
     if request.method == 'POST':
         if request.form['username'] != app.config['USERNAME'] or \
@@ -49,11 +49,11 @@ def login():
         else:
             session['logged_in'] = True
             flash('Welcome')
-            return redirect(url_for('main'))
+            return redirect(url_for('tasks'))
     return render_template('login.html')
 
 
-@app.route('/tasks/', endpoint='tasks')
+@app.route('/tasks/', methods=['GET'], endpoint='tasks')
 @login_required
 def tasks():
     g.db = connect_db()
@@ -89,28 +89,27 @@ def tasks():
 def new_task():
     g.db = connect_db()
     name = request.form['name']
-    date = request.form['date']
+    date = request.form['due_date']
     priority = request.form['priority']
 
     if not (priority or date or name):
         flash("All fields are required. Please try again.")
         return redirect(url_for('tasks'))
     else:
-        cursor = g.db.execute(
-            'INSERT INTO tasks (name, due_date, priority, status) (?,?,?,1)',
-            [name, date, priority]
-        )
-    g.db.commit()
-    g.db.close()
-    flash('New entry was successfully posted. Thanks.')
-    return redirect(url_for('tasks'))
+        g.db.execute('INSERT INTO tasks (name, due_date, priority, status) VALUES (?,?,?,1)', [
+            name, date, priority
+        ])
+        g.db.commit()
+        g.db.close()
+        flash('New entry was successfully posted. Thanks.')
+        return redirect(url_for('tasks'))
 
 
 @app.route('/complete/<int:task_id>/', endpoint='complete')
 @login_required
 def complete(task_id):
     g.db = connect_db()
-    g.db.execute('UPDATE tasks set status 0 WHERE task_id='+str(task_id))
+    g.db.execute('UPDATE tasks SET status=0 WHERE task_id=' + str(task_id))
     g.db.commit()
     g.db.close()
     flash('The task was marked as complete')
@@ -121,7 +120,7 @@ def complete(task_id):
 @login_required
 def delete_entry(task_id):
     g.db = connect_db()
-    g.db.execute('DELETE FROM tasks where task_id='+str(task_id))
+    g.db.execute('DELETE FROM tasks where task_id=' + str(task_id))
     g.db.commit()
     g.db.close()
     flash('The task was deleted.')
