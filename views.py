@@ -6,14 +6,14 @@ from functools import wraps
 
 from flask_sqlalchemy import SQLAlchemy
 
-from forms import AddTaskForm
+from forms import AddTaskForm, LoginForm, RegisterForm
 
 # configurations
 app = Flask(__name__)
 app.config.from_object('_config')
 db = SQLAlchemy(app)
 
-from models import Task
+from models import Task, User
 
 
 # Helpers
@@ -32,6 +32,22 @@ def login_required(test):
 
 # Route handlers
 
+@app.route('/register/', methods=['GET', 'POST'], endpoint='register')
+def register():
+    error = None
+    form = RegisterForm(request.form)
+    if request.method == 'POST':
+        if form.validate():
+            new_user = User(
+                name=form.name.data,
+                email=form.email.data,
+                password=form.password.data
+            )
+            db.session.add(new_user)
+            db.session.commit()
+            flash('Thanks for registering. Please login')
+            return redirect(url_for('login'))
+    return render_template('register.html', form=form, error=error)
 
 @app.route('/logout/', methods=['GET'], endpoint='logout')
 def logout():
@@ -42,16 +58,20 @@ def logout():
 
 @app.route('/', methods=['GET', 'POST'], endpoint='login')
 def login():
+    form = LoginForm(request.form)
+    error = None
     if request.method == 'POST':
-        if request.form['username'] != app.config['USERNAME'] or \
-                request.form['password'] != app.config['PASSWORD']:
-            error = 'INVALID CREDENTIALS. PLEASE TRY AGAIN'
-            return render_template('login.html', error=error)
+        if form.validate():
+            user = User.query.filter_by(email=form.name.data).first()
+            if user and user.password == form.password.data:
+                session['logged_in'] = True
+                flash('Welcome')
+                return redirect(url_for('tasks'))
+            else:
+                error = 'Invalid username or password.'
         else:
-            session['logged_in'] = True
-            flash('Welcome')
-            return redirect(url_for('tasks'))
-    return render_template('login.html')
+            error = 'Both fields are required.'
+    return render_template('login.html', form=form, error=error)
 
 
 @app.route('/tasks/', methods=['GET'], endpoint='tasks')
