@@ -7,8 +7,10 @@ DATABASE = 'flasktaskr.db'
 USERNAME = 'admin'
 PASSWORD = 'admin'
 WTF_CSRF_ENABLED = True
-SECRET_KEY = 'myprecious'
-
+SECRET_KEY = 'my_precious'
 
 # full path for the database
 DATABASE_PATH = os.path.join(basedir, DATABASE)
+
+# database uri
+SQLALCHEMY_DATABASE_URI = 'sqlite:///' + DATABASE_PATH
