@@ -49,9 +49,11 @@ def register():
             return redirect(url_for('login'))
     return render_template('register.html', form=form, error=error)
 
+
 @app.route('/logout/', methods=['GET'], endpoint='logout')
 def logout():
     session.pop('logged_in', None)
+    session.pop('user_id', None)
     flash('Logged out')
     return redirect(url_for('login'))
 
@@ -65,6 +67,7 @@ def login():
             user = User.query.filter_by(email=form.name.data).first()
             if user and user.password == form.password.data:
                 session['logged_in'] = True
+                session['user_id'] = user.id
                 flash('Welcome')
                 return redirect(url_for('tasks'))
             else:
@@ -97,10 +100,12 @@ def new_task():
         if form.validate() or True:
             print(form.due_date)
             new_task = Task(
-                form.name.data,
-                form.due_date.data,
-                form.priority.data,
-                '1',
+                name=form.name.data,
+                due_date=form.due_date.data,
+                priority=form.priority.data,
+                status='1',
+                user_id=session['user_id'],
+                posted_date=datetime.date.today(),
             )
             db.session.add(new_task)
             db.session.commit()
