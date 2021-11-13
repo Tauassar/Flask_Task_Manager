@@ -33,6 +33,11 @@ class AllTests(unittest.TestCase):
         db.session.add(new_user)
         db.session.commit()
 
+    def create_admin_user(self, name, email, password):
+        new_user = User(name=name, email=email, password=password, role='admin')
+        db.session.add(new_user)
+        db.session.commit()
+
     def logout(self):
         return self.app.get('logout/', follow_redirects=True)
 
@@ -49,6 +54,9 @@ class AllTests(unittest.TestCase):
             due_date='2016-08-10',
             priority='1'
         ), follow_redirects=True)
+
+    def delete_task(self, task_id):
+        return self.app.get(f'/delete/{task_id}', follow_redirects=True)
 
     def test_user_can_register(self):
         new_user = User('michael', 'michael@mherman.org', 'michaelherman')
@@ -147,19 +155,63 @@ class AllTests(unittest.TestCase):
         response = self.app.get('/delete/1', follow_redirects=True)
         self.assertIn(b'The task was deleted.', response.data)
 
-    # def test_users_cannot_complete_tasks_that_are_not_created_by_them(self):
-    #     self.create_user('Michael', 'michael@realpython.com', 'python')
-    #     self.login('Michael', 'python')
-    #     self.app.get('tasks/', follow_redirects=True)
-    #     self.create_task()
-    #     self.logout()
-    #     self.create_user('Fletcher', 'fletcher@realpython.com', 'python101')
-    #     self.login('Fletcher', 'python101')
-    #     self.app.get('tasks/', follow_redirects=True)
-    #     response = self.app.get("complete/1/", follow_redirects=True)
-    #     self.assertNotIn(
-    #         b'The task was marked as complete', response.data
-    #     )
+    def test_users_cannot_complete_tasks_that_are_not_created_by_them(self):
+        self.create_user('Michael', 'michael@realpython.com', 'python')
+        self.login('Michael', 'python')
+        self.app.get('tasks/', follow_redirects=True)
+        self.create_task()
+        self.logout()
+        self.create_user('Fletcher', 'fletcher@realpython.com', 'python101')
+        self.login('Fletcher', 'python101')
+        self.app.get('tasks/', follow_redirects=True)
+        response = self.app.get("complete/1/", follow_redirects=True)
+        self.assertNotIn(
+            b'The task was marked as complete', response.data
+        )
+        self.assertIn(b'You can only update tasks that belong to you.', response.data)
+
+    def test_users_cannot_delete_tasks_that_are_not_created_by_them(self):
+        self.create_user('Michael', 'michael@realpython.com', 'python')
+        self.login('Michael', 'python')
+        self.app.get('tasks/', follow_redirects=True)
+        self.create_task()
+        self.logout()
+        self.create_user('Fletcher', 'fletcher@realpython.com', 'python101')
+        self.login('Fletcher', 'python101')
+        self.app.get('tasks/', follow_redirects=True)
+        response = self.delete_task(1)
+        self.assertNotIn(
+            b'The task was deleted.', response.data
+        )
+        self.assertNotIn(b'You can only update tasks that belong to you.', response.data)
+        self.assertIn(b'You can only delete tasks that belong to you.', response.data)
+
+    def test_user_role(self):
+        db.session.add(
+            User(
+                "Johnny",
+                "john@doe.com",
+                "johnny"
+            )
+        )
+        db.session.commit()
+        users = db.session.query(User).all()
+        print(users)
+        for user in users:
+            self.assertEqual(user.role, 'user')
+
+    def test_admin_users_can_complete_and_delete_not_created_by_them_tasks(self):
+        self.create_admin_user('Michael', 'michael@realpython.com', 'python')
+        self.create_user('Fletcher', 'fletcher@realpython.com', 'python101')
+        self.login('Fletcher', 'python101')
+        self.app.get('/tasks/', follow_redirects=True)
+        self.create_task()
+        self.logout()
+        self.login('Michael', 'python')
+        response = self.app.get('/complete/1', follow_redirects=True)
+        self.assertIn(b'The task was marked as complete', response.data)
+        response = self.app.get('/delete/1', follow_redirects=True)
+        self.assertIn(b'The task was deleted.', response.data)
 
 
 if __name__ == '__main__':

@@ -73,6 +73,7 @@ def login():
             if user and user.password == form.password.data:
                 session['logged_in'] = True
                 session['user_id'] = user.id
+                session['user_role'] = user.role
                 flash('Welcome')
                 return redirect(url_for('tasks'))
             else:
@@ -132,18 +133,26 @@ def new_task():
 @app.route('/complete/<int:task_id>/', endpoint='complete')
 @login_required
 def complete(task_id):
-    db.session.query(Task).filter_by(task_id=task_id).update({'status': '0'})
-    db.session.commit()
-    flash('The task was marked as complete')
+    task = db.session.query(Task).filter_by(task_id=task_id)
+    if session['user_id'] == task.first().user_id or session['user_role'] == 'admin':
+        task.update({'status': '0'})
+        db.session.commit()
+        flash('The task was marked as complete')
+    else:
+        flash('You can only update tasks that belong to you.')
     return redirect(url_for('tasks'))
 
 
 @app.route('/delete/<int:task_id>/')
 @login_required
 def delete_entry(task_id):
-    db.session.query(Task).filter_by(task_id=task_id).delete()
-    db.session.commit()
-    flash('The task was deleted.')
+    task = db.session.query(Task).filter_by(task_id=task_id)
+    if session['user_id'] == task.first().user_id or session['user_role'] == 'admin':
+        task.delete()
+        db.session.commit()
+        flash('The task was deleted.')
+    else:
+        flash('You can only delete tasks that belong to you.')
     return redirect(url_for('tasks'))
 
 
@@ -153,4 +162,4 @@ def flash_error(form):
             flash(u"Error in the %s field - %s" % (
                 getattr(form, field).label.text, error),
                   'error'
-            )
+                  )
