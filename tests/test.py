@@ -111,7 +111,7 @@ class AllTests(unittest.TestCase):
         self.register('Michael', 'michael@realpython.com', 'python', 'python')
         self.login('Michael', 'python')
         response = self.logout()
-        self.assertIn(b'Logged out', response.data)
+        self.assertIn(b'Goodbye!', response.data)
 
     def test_logged_in_users_can_access_tasks_page(self):
         self.register('Michael', 'michael@realpython.com', 'python', 'python')
@@ -212,6 +212,44 @@ class AllTests(unittest.TestCase):
         self.assertIn(b'The task was marked as complete', response.data)
         response = self.app.get('/delete/1', follow_redirects=True)
         self.assertIn(b'The task was deleted.', response.data)
+
+    def test_task_template_displays_logged_in_user_name(self):
+        self.create_user('Michael', 'michael@realpython.com', 'python')
+        self.login('Michael', 'python')
+        response = self.app.get('tasks/', follow_redirects=True)
+        self.assertIn(b'Michael', response.data)
+
+    def test_users_cannot_see_task_modify_links_for_tasks_not_created_by_them(self):
+        self.create_user('Michael', 'michael@realpython.com', 'python')
+        self.login('Michael', 'python')
+        self.app.get('task/', follow_redirects=True)
+        self.create_task()
+        self.logout()
+        self.create_user('Michael1', 'michael1@realpython.com', 'python')
+        self.login('Michael1', 'python')
+        response = self.app.get('/task', follow_redirects=True)
+        self.assertNotIn(b'Delete', response.data)
+        self.assertNotIn(b'Mark as Complete', response.data)
+
+    def test_users_can_see_task_modify_links_for_tasks_created_by_them(self):
+        self.create_user('Michael', 'michael@realpython.com', 'python')
+        self.login('Michael', 'python')
+        self.create_task()
+        response = self.app.get('/tasks', follow_redirects=True)
+        self.assertIn(b'Delete', response.data)
+        self.assertIn(b'Mark as Complete', response.data)
+
+    def test_admin_users_can_see_task_modify_links_for_all_tasks(self):
+        self.create_user('Michael', 'michael@realpython.com', 'python')
+        self.login('Michael', 'python')
+        self.app.get('tasks/', follow_redirects=True)
+        self.create_task()
+        self.logout()
+        self.create_admin_user('Michael1', 'michael1@realpython.com', 'python')
+        self.login('Michael1', 'python')
+        response = self.app.get('/tasks', follow_redirects=True)
+        self.assertIn(b'Delete', response.data)
+        self.assertIn(b'Mark as Complete', response.data)
 
 
 if __name__ == '__main__':

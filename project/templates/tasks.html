@@ -65,10 +65,12 @@
           <td width="100px">{{ task.posted_date }}</td>
           <td width="50px">{{ task.priority }}</td>
           <td width="90px">{{ task.poster.name }}</td>
-          <td>
-            <a href="{{ url_for('.delete_entry', task_id = task.task_id) }}">Delete</a>  -
-            <a href="{{ url_for('.complete', task_id = task.task_id) }}">Mark as Complete</a>
-          </td>
+          {% if task.user_id == session.user_id or session.user_role == 'admin' %}
+            <td>
+              <a href="{{ url_for('.delete_entry', task_id = task.task_id) }}">Delete</a>  -
+              <a href="{{ url_for('.complete', task_id = task.task_id) }}">Mark as Complete</a>
+            </td>
+          {% endif %}
         </tr>
       {% endfor %}
     </table>
@@ -97,9 +99,11 @@
           <td width="100px">{{ task.posted_date }}</td>
           <td width="50px">{{ task.priority }}</td>
           <td width="90px">{{ task.poster.name }}</td>
-          <td>
-             <a href="{{ url_for('tasks.delete_entry', task_id = task.task_id) }}">Delete</a>
-          </td>
+          {% if task.user_id == session.user_id or session.user_role == 'admin' %}
+            <td>
+               <a href="{{ url_for('tasks.delete_entry', task_id = task.task_id) }}">Delete</a>
+            </td>
+          {% endif %}
         </tr>
       {% endfor %}
     </table>

@@ -34,7 +34,9 @@ def register():
 def logout():
     session.pop('logged_in', None)
     session.pop('user_id', None)
-    flash('Logged out')
+    session.pop('user_name', None)
+    session.pop('user_role', None)
+    flash('Goodbye!')
     return redirect(url_for('.login'))
 
 
@@ -48,6 +50,7 @@ def login():
             if user and user.password == form.password.data:
                 session['logged_in'] = True
                 session['user_id'] = user.id
+                session['user_name'] = user.name
                 session['user_role'] = user.role
                 flash('Welcome')
                 return redirect(url_for('tasks.tasks'))
