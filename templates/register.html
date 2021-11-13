@@ -40,7 +40,7 @@
         {{ form.confirm_password(placeholder="confirm password") }}
         {% if form.confirm_password.errors %}
           <span class="error">
-            {% for error in form.confirm.errors %}
+            {% for error in form.confirm_password.errors %}
               {{error}}
             {% endfor %}
           </span>

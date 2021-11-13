@@ -26,7 +26,7 @@ def login_required(test):
             return test(*args, **kwargs)
         else:
             flash("You are not authorized to view this page")
-            return redirect(url_for('main'))
+            return redirect(url_for('login'))
 
     return wrap
 
@@ -69,7 +69,7 @@ def login():
     error = None
     if request.method == 'POST':
         if form.validate():
-            user = User.query.filter_by(email=form.name.data).first()
+            user = User.query.filter_by(name=form.name.data).first()
             if user and user.password == form.password.data:
                 session['logged_in'] = True
                 session['user_id'] = user.id
