@@ -38,6 +38,6 @@ def internal_error(error):
         now = datetime.datetime.now()
         r = request.url
         with open('error.log', 'a') as f:
-            current_timestamp = now.strftime()
+            current_timestamp = now.strftime("%d-%m-%Y %H:%M:%S")
             f.write(f'500 error at {current_timestamp}: {r}')
     return render_template('500.html'), 500
