@@ -1,5 +1,5 @@
 # Create table and insert some data
-from project import db
+from project import db, bcrypt
 from project.models import Task, User
 from datetime import date
 
@@ -7,7 +7,7 @@ from datetime import date
 # try:
 db.create_all()
 # Fill db with sample data
-db.session.add(User("admin", "ad@min.com", "admin", "admin"))
+db.session.add(User("admin", "ad@min.com", "admin", bcrypt.generate_password_hash("admin")))
 db.session.add(Task(
     name="Finish this tutorial",
     due_date=date(2015, 3, 13),

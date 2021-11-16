@@ -5,6 +5,8 @@ venv/*
 debugging/*
 */__pycache__/*
 __pycache__/*
+project/tasks/__pycache__/*
+project/users/__pycache__/*
 htmlcov/*
 .coverage
 error.log
